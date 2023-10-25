@@ -1,0 +1,4 @@
+<launch>
+    <include file = "$(find f110_simulator)/launch/simulator.launch" />
+    <node pkg = "f110_simulator" type ="auto_brake.py" name = "Safety" output = "screen" />
+</launch>
