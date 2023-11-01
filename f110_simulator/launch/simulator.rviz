@@ -127,7 +127,7 @@ Visualization Manager:
         laser_model:
           Alpha: 1
           Show Axes: false
-          Show Trail: false
+          Show Trail: true
           Value: true
       Name: RobotModel
       Robot Description: /racecar/robot_description

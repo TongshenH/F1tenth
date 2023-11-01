@@ -87,9 +87,9 @@ class WallFollow:
         if abs(angle) > math.radians(0) and abs(angle) <= math.radians(10):
             drive_msg.drive.speed = velocity
         elif abs(angle) > math.radians(10) and abs (angle) <= math.radians(20):
-            drive_msg.drive.speed = 1.0
+            drive_msg.drive.speed = 1.2
         else:
-            drive_msg.drive.speed = 0.5
+            drive_msg.drive.speed = 0.7
         self.drive_pub.publish(drive_msg)
 
 

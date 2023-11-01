@@ -82,8 +82,8 @@ nav_key_char: "n"
 new_key_char: "z"
 
 # Keyboard driving params
-keyboard_speed: 1.8  # meters/second
-keyboard_steer_ang: .3  # radians
+keyboard_speed: 1  # meters/second
+keyboard_steer_ang: .2  # radians
 
 # obstacle parameters
 obstacle_size: 2
