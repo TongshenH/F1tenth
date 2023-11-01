@@ -25,12 +25,12 @@ class Safety(object):
         self.x = 0
         self.y = 0
         self.yaw = 0
-        self.threshold = 3
+        self.threshold = 0.4
 
         # Publish AckermanDriveStamp message
-        self.brake_act_pub = rospy.Publisher("/brake", AckermannDriveStamped, queue_size=1)
+        self.brake_act_pub = rospy.Publisher("/drive", AckermannDriveStamped, queue_size=1)
         # Publish bool message
-        self.brake_pub = rospy.Publisher('/brake_bool', Bool, queue_size=1)
+        self.brake_pub = rospy.Publisher('/brake_bool', Bool, queue_size=10)
         # Subscribe the odom message
         self.odom_sub = rospy.Subscriber('/odom', Odometry, self.odom_callback)
         # Subscribe the laser scan message
@@ -61,14 +61,14 @@ class Safety(object):
                     ttc = float('inf')
                 
                 # Reverse motion
-                if self.vel < 0 and ttc < abs(self.vel) / 8.26 + 0.12:
+                if self.vel < 0 and ttc < self.threshold:
                     self.brake = True
                     self.ackerman.drive.speed = 0
                     self.brake_act_pub.publish(self.ackerman)
                     self.brake_pub.publish(self.brake)
 
                 # Forward motion
-                elif self.vel > 0 and ttc < self.vel * 0.05:
+                elif self.vel > 0 and ttc < self.threshold:
                     self.brake = True
                     self.ackerman.drive.speed = 0
                     # Uncomment the line below for tuning minimum TTC
