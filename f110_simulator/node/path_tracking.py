@@ -10,6 +10,7 @@ sys.path.insert(1, parent + "/src")
 import rospy
 import numpy as np
 from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PointStamped
 from ackermann_msgs.msg import AckermannDriveStamped
 import squaternion as quat
 
@@ -68,6 +69,11 @@ class PathTrackingNode:
         self.ackermman_pub = rospy.Publisher(
             '/drive', AckermannDriveStamped, queue_size=1)
 
+        self.tracking_point = PointStamped()
+        self.tracking_point.header.frame_id = "map"
+        self.tracking_point.header.stamp = rospy.Time.now()
+        self.tracking_point_pub = rospy.Publisher("/tracking_point", PointStamped, queue_size=10)
+
     def actual_steering_callback(self, data):
         """Get the actual steering angle topic
 
@@ -105,11 +111,8 @@ class PathTrackingNode:
 
     def track(self):
         """Follow the path"""
-        # get the first taget waypoint
-        # while self.state.x == 0:
-        #     continue
 
-        target_idx, _ = self.stanley_controller.calc_target_index(self.state)
+        target_idx, _, _, _ = self.stanley_controller.calc_target_index(self.state)
 
         while not rospy.is_shutdown():
             if target_idx < self.path_len:
@@ -124,6 +127,11 @@ class PathTrackingNode:
                 steering_angle = np.clip(
                     steering_angle, -self.max_steer, self.max_steer)
                 linear_speed = self.linear_speed
+                self.tracking_point.point.x = self.path[:, 0][target_idx]
+                self.tracking_point.point.y = self.path[:, 1][target_idx]
+                # Visualize the tracking point
+                self.tracking_point_pub.publish(self.tracking_point)
+
                 # output the steering angle to the screen
                 rospy.loginfo("Update the steering angle {}!".format(
                     np.degrees(steering_angle)))
@@ -137,7 +145,7 @@ class PathTrackingNode:
                 rospy.loginfo("reach the destination!")
             # publish the steering angle and libnear speed
             self.drive_msg.drive.speed = linear_speed
-            self.drive_msg.drive.steering_angle = -1 * (steering_angle)
+            self.drive_msg.drive.steering_angle = -1 * steering_angle
             self.ackermman_pub.publish(self.drive_msg)
             self.rate.sleep()
 
