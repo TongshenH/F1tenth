@@ -45,7 +45,7 @@ class DesiredTrajectory():
 
         file_path = 'desired_traj.csv'
         with open(file_path, 'w') as csv_file:
-            fieldnames = ['pose_x', 'pose_y']
+            fieldnames = ['pose_x', 'pose_y', 'yaw']
             writer = csv.writer(csv_file)
             writer.writerow(fieldnames)
             for i in range(len(self.x)):
