@@ -37,6 +37,7 @@ class State(object):
         self.yaw = yaw
         self.steering_angle = 0
         self.v = v
+        self.vel = 0
         self.tau = 1
         self.a = 0
         self.k = 100
@@ -58,7 +59,7 @@ class State(object):
         self.y = y
         self.yaw = yaw
         self.v = vel
-        self.vel = 1.0
+        self.vel = 2.0
         self.steering_angle = steering_angle
         dv = 0
         dx = self.v * np.cos(self.yaw)

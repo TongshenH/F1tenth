@@ -6,7 +6,7 @@ import rospy
 
 
 class StanleyController:
-    def __init__(self, traj_d, stanley_k=0.5, wheelbase=0.3302):
+    def __init__(self, traj_d, stanley_k=1.3, wheelbase=0.3302):
         """
         Parameters
         ----------

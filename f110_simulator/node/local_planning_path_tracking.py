@@ -54,15 +54,16 @@ class PathTrackingNode:
         self.stanley_controller = StanleyController(self.traj_d, K_S, L_W)
         self.frenet_optimal_planner = FrenetPathPlanning(self.traj_d)
 
-        # Publish the local path list 
-        self.local_path_pub = rospy.Publisher('/local_path', Path, queue_size=10)
-
         # Publish frequency
         self.rate = rospy.Rate(int(rospy.get_param("~publish_rate")))
 
         # Init subscribers to retrieve position and heading from NovAtel RTK
         self.odom_sub = rospy.Subscriber("odom",
                                          Odometry, self.odom_callback)
+        
+        # Init local path publisher
+        self.local_path_pub = None
+        self.best_local_pub = rospy.Publisher('/best_local_path', Path, queue_size=10)
 
         # Init subscribers to retrieve obstacle information
         # self.obs_sub = rospy.Subscriber("/obstacle2", Detection, self.obs_callback)
@@ -162,32 +163,45 @@ class PathTrackingNode:
     def track(self):
         """Follow the path"""
         # get the first target waypoint
-        while self.state.x == 0:
-            continue
+        # while self.state.x == 0:
+        #     continue
 
         traj_actual = FrenetPath()
-        visual = visualization(self.traj_d)
         target_idx, _ = self.stanley_controller.calc_target_index(self.state)
 
-        local_path_msg = Path()
-        local_path_msg.header.frame_id = 'map'
-        local_path_msg.header.stamp = rospy.get_rostime()
-
         while not rospy.is_shutdown():
+            
+            local_paths = []
             path, det_range, num_obb, fplist = self.frenet_optimal_planner.frenet_optimal_planning(self.state, self.obs)
-
-            for p in fplist:
-                for point in p:
+            # Publish the local path list
+            for i in range(len(fplist)):
+                self.local_path_pub = rospy.Publisher(f'/local_path{i}', Path, queue_size=10)
+                local_paths.append(self.local_path_pub)
+            for j, p in enumerate(fplist):
+                local_path_msg = Path()
+                local_path_msg.header.frame_id = 'map'
+                local_path_msg.header.stamp = rospy.get_rostime()
+                for i in range(len(p.x)):
                     pose = PoseStamped()
-                    pose.pose.position.x = point[0]
-                    pose.pose.position.y = point[1]
+                    pose.pose.position.x = p.x[i]
+                    pose.pose.position.y = p.y[i]
                     local_path_msg.poses.append(pose)
-
-                    # Publish the local path set
-                    self.local_path_pub.publish(local_path_msg)
+                local_paths[j].publish(local_path_msg)
 
             if path is None:
                 break
+            
+            # Publish the best path
+            best_path_msg = Path()
+            best_path_msg.header.frame_id = 'map'
+            best_path_msg.header.stamp = rospy.get_rostime()
+            for i in range(len(path.x)):
+                    pose = PoseStamped()
+                    pose.pose.position.x = p.x[i]
+                    pose.pose.position.y = p.y[i]
+                    best_path_msg.poses.append(pose)
+                    self.best_local_pub.publish(best_path_msg)
+            
 
             self.stanley_controller.update_trajectory(path)
 

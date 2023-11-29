@@ -22,6 +22,7 @@ class FrenetPathPlanning:
         self.det_range = 0
         self.num_obb = 0
 
+
     def frenet_optimal_planning(self, state: State, obs: ndarray):
         """find the optimal local path based on the frenet algorithm
 
