@@ -1,0 +1,14 @@
+<launch>
+    <arg name="node_start_delay" default="0"/>
+    <arg name="publish_rate" default="10" />
+    <arg name="path_fp" default="$(find f110_simulator)/trajectory/key_points.csv" />
+
+    <node name="trajectory_node" pkg="f110_simulator" type="trajectory.py" output="screen" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@'">
+        <param name="~publish_rate" value="$(arg publish_rate)"/>
+        <param name="~path_fp" value="$(arg path_fp)"/>
+    </node>
+
+    <node pkg="f110_simulator" type="dynamic_tf2_broadcaster.py" name="broadcaster_dynamic" output="screen">
+        <param name="~publish_rate" value="$(arg publish_rate)"/>
+    </node>
+</launch>

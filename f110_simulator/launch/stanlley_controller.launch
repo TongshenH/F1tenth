@@ -1,0 +1,25 @@
+<launch>
+    <arg name="node_start_delay" default="0"/>
+    <arg name="publish_rate" default="20" />
+    <arg name="max_steer" default="24.001202" />
+    <arg name="stanley_k" default="1.6" />
+    <arg name="wheelbase" default="0.3302" />
+    <arg name="linear_speed" default="3.7" />
+    <arg name="Length" default="2.1" />
+    <arg name="W" default="1.0" />
+    <arg name="path_fp" default="$(find f110_simulator)/trajectory/key_points.csv" />
+
+    <include file = "$(find f110_simulator)/launch/simulator.launch" />
+    <node name="path_tracking_node" pkg="f110_simulator" type="path_tracking.py" output="screen" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@'">
+        <param name="~publish_rate" value="$(arg publish_rate)"/>
+        <param name="~stanley_k" value="$(arg stanley_k)"/>
+        <param name="~wheelbase" value="$(arg wheelbase)"/>
+        <param name="~linear_speed" value="$(arg linear_speed)"/>
+        <param name="~path_fp" value="$(arg path_fp)"/>
+        <param name="~max_steer" value="$(arg max_steer)"/>
+        <param name="~W" value="$(arg W)"/>
+        <param name="~Length" value="$(arg Length)"/>
+    </node>
+    <node pkg = "f110_simulator" type = "publish_path.py" name = "path_publisher"/>
+    <node pkg = "f110_simulator" type ="auto_brake.py" name = "Safety" output = "screen" />
+</launch>

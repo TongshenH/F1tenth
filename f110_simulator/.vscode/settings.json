@@ -1,0 +1,13 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/tongshen/Projects/Scaled_auto_vehicle/catkin_ws/devel/lib/python3/dist-packages",
+        "/home/tongshen/Projects/zed2/catkin_ws/devel/lib/python3/dist-packages",
+        "/home/tongshen/Projects/RTK/catkin_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ],
+    "cSpell.words": [
+        "fplist",
+        "Frenet",
+        "loadtxt"
+    ]
+}

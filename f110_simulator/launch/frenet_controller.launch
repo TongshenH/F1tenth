@@ -1,0 +1,18 @@
+<launch>
+    <arg name="node_start_delay" default="0"/>
+    <arg name="publish_rate" default="10" />
+    <arg name="sim" default="False" />
+    <arg name="bag_path" default="$(find f110_simulator)/bag" />
+    <arg name="path_fp" default="$(find f110_simulator)/trajectory/keypoints.csv" />
+
+    <include file = "$(find f110_simulator)/launch/simulator.launch" />
+    <!-- <include file="$(find f110_simulator)/launch/vehicle_odom.launch"/> -->
+
+    <node name="path_tracking_node" pkg="f110_simulator" type="local_planning_path_tracking.py" output="screen" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@'">
+        <param name="~publish_rate" value="$(arg publish_rate)"/>
+        <param name="~bag_path" value="$(arg bag_path)"/>
+        <param name="~path_fp" value="$(arg path_fp)"/>
+        <param name="~sim" value="$(arg sim)"/>
+    </node>
+
+</launch>

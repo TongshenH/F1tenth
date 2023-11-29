@@ -1,0 +1,7 @@
+<launch>
+    <arg name="publish_rate" default="10" />
+
+    <node name="dynamic_tf2_broadcaster" pkg="f110_simulator" type="dynamic_tf2_broadcaster.py" output="screen">
+        <param name="~publish_rate" value="$(arg publish_rate)"/>
+    </node>
+</launch>

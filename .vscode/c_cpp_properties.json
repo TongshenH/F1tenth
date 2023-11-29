@@ -1,0 +1,27 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/tongshen/Projects/zed2/catkin_ws/devel/include/**",
+        "/home/tongshen/Projects/RTK/catkin_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/tongshen/Projects/Scaled_auto_vehicle/catkin_ws/src/f110_ros/f110_simulator/include/**",
+        "/home/tongshen/Projects/Scaled_auto_vehicle/catkin_ws/src/f110_ros/rrt/include/**",
+        "/home/tongshen/Projects/Scaled_auto_vehicle/catkin_ws/src/f110_ros/scan_matching/include/**",
+        "/home/tongshen/Projects/RTK/catkin_ws/src/steering_control/include/**",
+        "/home/tongshen/Projects/zed2/catkin_ws/src/zed-ros-wrapper/zed-ros-interfaces/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
