@@ -14,7 +14,7 @@ from geometry_msgs.msg import PointStamped
 from ackermann_msgs.msg import AckermannDriveStamped
 import squaternion as quat
 
-from stanlley_controller import StanleyController
+from stanley_controller import StanleyController
 from CubicSpline.cubic_spline_planner import calc_spline_course
 
 State = namedtuple("State", "x, y, yaw, vel, steering_angle")

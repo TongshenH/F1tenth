@@ -1,3 +1,4 @@
+# https://atsushisakai.github.io/PythonRobotics/modules/path_tracking/stanley_control/stanley_control.html
 from math import pi
 
 import numpy as np
@@ -5,21 +6,28 @@ import rospy
 
 
 class StanleyController:
-    def __init__(self, waypoints, stanley_k=0.1, wheelbase=0.3302):
+    def __init__(self, traj_d, stanley_k=0.1, wheelbase=1.25):
         """
         Parameters
         ----------
-        waypoints : ndarray, [n, 3]
-            Every entry contains x, y and yaw
+        traj_d : desired_traj namedtuple
+            contains x, y and yaw
         stanley_k : float, optional
             stanley portional gain, by default 0.5
         wheelbase : float, optional
             vehicle wheelbase, by default 1.25
         """
-        self.x, self.y, self.yaw = waypoints[:, 0], waypoints[:, 1], waypoints[:, 2]
+        self.x = traj_d.cx
+        self.y = traj_d.cy
+        self.yaw = traj_d.cyaw
         self.k = stanley_k
         self.c = 0.2
         self.wheelbase = wheelbase
+
+    def update_trajectory(self, path):
+        self.x = path.x
+        self.y = path.y
+        self.yaw = path.yaw
 
     def calc_target_index(self, state):
         """Retrieve the waypoint which is closest to the front axle.
@@ -47,13 +55,12 @@ class StanleyController:
         # Project RMS error onto front axle vector
         front_axle_vec = [-np.cos(state.yaw + pi / 2),
                           -np.sin(state.yaw + pi / 2)]
-        front_axle_error = np.dot(
-            [dx[target_idx], dy[target_idx]], front_axle_vec)
-        rospy.loginfo(
-            f"the target position is x: {self.x[target_idx]} y: {self.y[target_idx]}")
-        return target_idx, front_axle_error, self.x[target_idx], self.y[target_idx]
+        front_axle_error = np.dot([dx[target_idx], dy[target_idx]], front_axle_vec)
+        # rospy.loginfo(
+        #     f"the target position is x: {self.x[target_idx]} y: {self.y[target_idx]}")
+        return target_idx, front_axle_error
 
-    def stanley_control(self, state, last_target_idx):
+    def stanley_control(self, state):
         """Generating the steering angle based on the current vehicle state and target waypoint
 
         Parameters
@@ -66,17 +73,14 @@ class StanleyController:
         Returns
         -------
         delta: float
-            The desired steeribng angle
+            The desired steering angle
         current_target_idx: int
             Current waypoint index
         """
-        current_target_idx, front_axle_error, _, _ = self.calc_target_index(state)
-
-        if last_target_idx >= current_target_idx:
-            current_target_idx = last_target_idx
+        current_target_idx, front_axle_error = self.calc_target_index(state)
 
         # theta_e corrects the heading error
-        theta_e = self.normalize_angle( 
+        theta_e = self.normalize_angle(
             self.yaw[current_target_idx] - state.yaw)
         # theta_d corrects the cross track error
 
