@@ -6,7 +6,7 @@ import rospy
 
 
 class StanleyController:
-    def __init__(self, traj_d, stanley_k=0.1, wheelbase=1.25):
+    def __init__(self, traj_d, stanley_k=0.5, wheelbase=0.3302):
         """
         Parameters
         ----------
@@ -15,7 +15,7 @@ class StanleyController:
         stanley_k : float, optional
             stanley portional gain, by default 0.5
         wheelbase : float, optional
-            vehicle wheelbase, by default 1.25
+            vehicle wheelbase, by default 0.3302
         """
         self.x = traj_d.cx
         self.y = traj_d.cy

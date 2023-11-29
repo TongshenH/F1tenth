@@ -13,13 +13,14 @@ import rospy
 import subprocess
 import numpy as np
 from std_msgs.msg import String
-from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry, Path
 # from novatel_oem7_msgs.msg import HEADING2
 from ackermann_msgs.msg import AckermannDriveStamped
 import squaternion as quat
 
 from src.State import State
-from src.stanley_controller import StanleyController
+from src.stanley_controller2 import StanleyController
 from src.CubicSpline.cubic_spline_planner import calc_spline_course
 from src.frenet_path_planning import FrenetPathPlanning
 # from RTK_motion_planning.msg import BBox3d, Detection
@@ -53,6 +54,9 @@ class PathTrackingNode:
         self.stanley_controller = StanleyController(self.traj_d, K_S, L_W)
         self.frenet_optimal_planner = FrenetPathPlanning(self.traj_d)
 
+        # Publish the local path list 
+        self.local_path_pub = rospy.Publisher('/local_path', Path, queue_size=10)
+
         # Publish frequency
         self.rate = rospy.Rate(int(rospy.get_param("~publish_rate")))
 
@@ -69,7 +73,7 @@ class PathTrackingNode:
             self.actual_steering_callback)
 
         # Init instances for publishing Ackermann msg
-        self.ackermann_msg = AckermannDrive()
+        self.ackermann_msg = AckermannDriveStamped()
         self.ackermman_pub = rospy.Publisher(
             '/drive', AckermannDriveStamped, queue_size=1)
 
@@ -133,7 +137,7 @@ class PathTrackingNode:
         yaw = q2.to_euler()[2]
         # Get the vel of the vehicle
         # vel = data.twist.twist.linear.x
-        vel = 1.0
+        vel = 4.0
         self.state.update(x, y, yaw, vel, self.actual_steering)
         self.state.cart2frenet()
 
@@ -165,8 +169,22 @@ class PathTrackingNode:
         visual = visualization(self.traj_d)
         target_idx, _ = self.stanley_controller.calc_target_index(self.state)
 
+        local_path_msg = Path()
+        local_path_msg.header.frame_id = 'map'
+        local_path_msg.header.stamp = rospy.get_rostime()
+
         while not rospy.is_shutdown():
-            path, det_range, num_obb = self.frenet_optimal_planner.frenet_optimal_planning(self.state, self.obs)
+            path, det_range, num_obb, fplist = self.frenet_optimal_planner.frenet_optimal_planning(self.state, self.obs)
+
+            for p in fplist:
+                for point in p:
+                    pose = PoseStamped()
+                    pose.pose.position.x = point[0]
+                    pose.pose.position.y = point[1]
+                    local_path_msg.poses.append(pose)
+
+                    # Publish the local path set
+                    self.local_path_pub.publish(local_path_msg)
 
             if path is None:
                 break

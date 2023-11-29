@@ -54,7 +54,7 @@ class FrenetPathPlanning:
         if best_path is None:
             print("can't find any path!!!!!")
             return None
-        return best_path, self.det_range, self.num_obb
+        return best_path, self.det_range, self.num_obb, fplist
 
     def check_paths(self, fplist: List) -> List:
         """Delete the paths with collision and large acceleration
