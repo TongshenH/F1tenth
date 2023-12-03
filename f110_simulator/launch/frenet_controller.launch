@@ -16,4 +16,5 @@
     </node>
     <node pkg = "f110_simulator" type = "publish_path.py" name = "path_publisher"/>
 
+
 </launch>
