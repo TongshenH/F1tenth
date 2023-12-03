@@ -4,8 +4,10 @@ from typing import List
 from numpy import ndarray
 import math
 
+import rospy
 from params import *
 from Path import FrenetPath
+from sensor_msgs.msg import LaserScan
 from QuarticPolynomial import QuarticPolynomial
 from obb_collision_detection import Obstacle, collision_check
 from QuinticPolynomialsPlanner.quintic_polynomials_planner import \
@@ -21,7 +23,8 @@ class FrenetPathPlanning:
         self.obs = []
         self.det_range = 0
         self.num_obb = 0
-
+        self.road_width = None
+        
 
     def frenet_optimal_planning(self, state: State, obs: ndarray):
         """find the optimal local path based on the frenet algorithm
@@ -151,7 +154,7 @@ class FrenetPathPlanning:
 
                 # Longitudinal motion planning (Velocity keeping)
                 for tv in np.arange(TARGET_SPEED - D_T_S * N_S_SAMPLE,
-                                    TARGET_SPEED + D_T_S * N_S_SAMPLE, D_T_S):
+                                    TARGET_SPEED, D_T_S):
                     tfp = copy.deepcopy(fp)
                     lon_qp = QuarticPolynomial(
                         state.s, state.v, state.a, tv, 0.0, Ti)
@@ -171,8 +174,9 @@ class FrenetPathPlanning:
                     ds = (TARGET_SPEED - tfp.s_d[-1]) ** 2
 
                     # Calculate the cost functional
-                    tfp.cd = K_J * Jp + K_T * Ti + K_D * tfp.d[-1] ** 2  # Cost function of the lateral
-                    tfp.cv = K_J * Js + K_T * Ti / tv + K_D * ds * 2  # Cost function of the longitudinal
+                    tfp.cd = K_J * Jp + K_T * Ti + K_D * sum(abs(d) for d in fp.d)   # Cost function of the lateral
+                    tfp.cv = K_J * Js + K_T * Ti / tv + K_D * ds ** 2      # Cost function of the longitudinal
+                    tfp.cv = 0
                     tfp.cf = K_LAT * tfp.cd + K_LON * tfp.cv
 
                     frenet_paths.append(tfp)

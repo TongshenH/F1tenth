@@ -11,7 +11,7 @@ import squaternion as quat
 import numpy as np
 
 
-class Safety(object):
+class Safety():
     """
     The class that handles emergency braking.
     """
@@ -26,6 +26,8 @@ class Safety(object):
         self.y = 0
         self.yaw = 0
         self.threshold = 0.4
+        self.beams = []
+        self.angle_increment = None
 
         # Publish AckermanDriveStamp message
         self.brake_act_pub = rospy.Publisher("/drive", AckermannDriveStamped, queue_size=1)
@@ -50,9 +52,14 @@ class Safety(object):
         for i in range(len(scan_msg.ranges)):
             obs_dis = scan_msg.ranges[i]
 
+            print(obs_dis)
+
             if not math.isinf(obs_dis) and not math.isnan(obs_dis):
+
+                print("a")
+
                 # Calculate Time-to-Collision
-                angle_increment = scan_msg.angle_increment
+                angle_increment = self.angle_increment
                 ttc_denominator = max(0.0, self.vel*math.cos(i*angle_increment-math.pi))
 
                 if ttc_denominator != 0:
@@ -71,17 +78,48 @@ class Safety(object):
                 elif self.vel > 0 and ttc < self.threshold:
                     self.brake = True
                     self.ackerman.drive.speed = 0
+
                     # Uncomment the line below for tuning minimum TTC
                     print("velocity:", self.vel)
                     print("TTC{}: {}".format(i, ttc))
                     self.brake_act_pub.publish(self.ackerman)
                     self.brake_pub.publish(self.brake)
 
+            # self.angle_increment = scan_msg.angle_increment
+            # self.beams.append(obs_dis)
 
-def main():
-    sn = Safety()
-    rospy.spin()
+    # def ttc_check(self):
+    #     print(self.beams)
+    #     for i, obs_dis in enumerate(self.beams):
+    #         if not math.isinf(obs_dis) and not math.isnan(obs_dis):
+
+    #             # Calculate Time-to-Collision
+    #             angle_increment = self.angle_increment
+    #             ttc_denominator = max(0.0, self.vel*math.cos(i*angle_increment-math.pi))
+
+    #             if ttc_denominator != 0:
+    #                 ttc = obs_dis / ttc_denominator
+    #             else:
+    #                 ttc = float('inf')
+                
+    #             # Reverse motion
+    #             if self.vel < 0 and ttc < self.threshold:
+    #                 self.brake = True
+    #                 self.ackerman.drive.speed = 0
+    #                 self.brake_act_pub.publish(self.ackerman)
+    #                 self.brake_pub.publish(self.brake)
+
+    #             # Forward motion
+    #             elif self.vel > 0 and ttc < self.threshold:
+    #                 self.brake = True
+    #                 self.ackerman.drive.speed = 0
+    #                 # Uncomment the line below for tuning minimum TTC
+    #                 print("velocity:", self.vel)
+    #                 print("TTC{}: {}".format(i, ttc))
+    #                 self.brake_act_pub.publish(self.ackerman)
+    #                 self.brake_pub.publish(self.brake)
 
 
 if __name__ == '__main__':
-    main()
+    sn = Safety()
+    sn.scan_callback()

@@ -35,6 +35,8 @@
     <rosparam command="load" file="$(find f110_simulator)/params.yaml"/>
   </node>
 
+  <node pkg = "f110_simulator" type ="auto_brake.py" name = "Safety" output = "screen" />
+
   <!-- ***Put launch command for new planner here:-->
   <!-- Launch the New Planner Node -->
   <!--   <node pkg="f110_simulator" name="new node's name" type="new file name" output="screen">

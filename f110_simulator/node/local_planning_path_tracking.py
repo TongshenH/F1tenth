@@ -163,9 +163,6 @@ class PathTrackingNode:
     def track(self):
         """Follow the path"""
         # get the first target waypoint
-        # while self.state.x == 0:
-        #     continue
-
         traj_actual = FrenetPath()
         target_idx, _ = self.stanley_controller.calc_target_index(self.state)
 
@@ -173,6 +170,7 @@ class PathTrackingNode:
             
             local_paths = []
             path, det_range, num_obb, fplist = self.frenet_optimal_planner.frenet_optimal_planning(self.state, self.obs)
+            
             # Publish the local path list
             for i in range(len(fplist)):
                 self.local_path_pub = rospy.Publisher(f'/local_path{i}', Path, queue_size=10)
@@ -197,10 +195,10 @@ class PathTrackingNode:
             best_path_msg.header.stamp = rospy.get_rostime()
             for i in range(len(path.x)):
                     pose = PoseStamped()
-                    pose.pose.position.x = p.x[i]
-                    pose.pose.position.y = p.y[i]
+                    pose.pose.position.x = path.x[i]
+                    pose.pose.position.y = path.y[i]
                     best_path_msg.poses.append(pose)
-                    self.best_local_pub.publish(best_path_msg)
+            self.best_local_pub.publish(best_path_msg)
             
 
             self.stanley_controller.update_trajectory(path)
@@ -208,7 +206,6 @@ class PathTrackingNode:
             # stanley controller return the steering angle in radian
             steering_angle, target_idx = self.stanley_controller.stanley_control(self.state)
             steering_angle = np.clip(steering_angle, -MAX_STEER, MAX_STEER)
-            print("The steering angle is", steering_angle)
             traj_actual.update(self.state)
 
             if show_animation:
