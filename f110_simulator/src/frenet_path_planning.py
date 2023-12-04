@@ -5,6 +5,7 @@ from numpy import ndarray
 import math
 
 import rospy
+import squaternion as quat
 from params import *
 from Path import FrenetPath
 from sensor_msgs.msg import LaserScan
@@ -13,6 +14,7 @@ from obb_collision_detection import Obstacle, collision_check
 from QuinticPolynomialsPlanner.quintic_polynomials_planner import \
     QuinticPolynomial
 from src.State import State
+from nav_msgs.msg import Odometry
 
 
 class FrenetPathPlanning:
@@ -20,10 +22,46 @@ class FrenetPathPlanning:
     """
     def __init__(self, traj_d):
         self.traj_d = traj_d
-        self.obs = []
-        self.det_range = 0
-        self.num_obb = 0
         self.road_width = None
+
+        # Init vehicle parameters
+        self.x = 0
+        self.y = 0
+        self.yaw = 0
+
+        # Init max gap parameters
+        self.max_gap_min = None
+        self.max_gap_max = None
+        self.max_gap_sub = rospy.Subscriber('/max_gap', LaserScan, self.max_gap_callback)
+        # Subscribe the odom message
+        self.odom_sub = rospy.Subscriber('/odom', Odometry, self.odom_callback)
+        
+    def max_gap_callback(self, data):
+        """Get the max gap top
+
+        Parameters
+        ----------
+        data : Laserscan
+            Contain the state of the vehicle including position, orientation and vel
+        """
+        
+        self.max_gap_max = data.angle_max
+        self.max_gap_min = data.angle_min
+
+    def odom_callback(self, data):
+        """Get the vehicle_odom topic
+
+        Parameters
+        ----------
+        data : odom
+            Contain the state of the vehicle including position, orientation and vel
+        """
+        # Get the position and orientation of the vehicle
+        self.x = data.pose.pose.position.x
+        self.y = data.pose.pose.position.y
+        q = data.pose.pose.orientation
+        q2 = quat.Quaternion(q.w, q.x, q.y, q.z)
+        self.yaw = q2.to_euler()[2]
         
 
     def frenet_optimal_planning(self, state: State, obs: ndarray):
@@ -41,12 +79,10 @@ class FrenetPathPlanning:
         FrenetPath
             return the best path in the Frenet coordinate
         """
-        self.obs = obs
         fplist = self.calc_frenet_paths(state)
         fplist = self.frenet2cart(fplist)
-        if len(self.obs) != 0:
-            print("check the path")
-            fplist = self.check_paths(fplist)
+        print("check the path")
+        fplist = self.check_paths(fplist, state)
 
         # find minimum cost path
         min_cost = float("inf")
@@ -58,10 +94,10 @@ class FrenetPathPlanning:
         if best_path is None:
             print("can't find any path!!!!!")
             return None
-        return best_path, self.det_range, self.num_obb, fplist
+        return best_path, fplist
 
-    def check_paths(self, fplist: List) -> List:
-        """Delete the paths with collision and large acceleration
+    def check_paths(self, fplist: List, state) -> List:
+        """Delete the paths not in the max gap
 
         Parameters
         ----------
@@ -75,60 +111,34 @@ class FrenetPathPlanning:
         """
         ok_ind = []
         for i, _ in enumerate(fplist):
-            collision, d = self.obb_collision_detection(fplist[i])
-            if any([v > MAX_SPEED for v in fplist[i].s_d]):  # Max speed check
-                print("exceed max speed")
+            traversable = self.traversable_check(fplist[i], state)
+            if traversable:
+                ok_ind.append(fplist[i])
+            elif not traversable:
                 continue
-            elif any([abs(a) > MAX_ACCEL for a in fplist[i].s_dd]):  # Max accel check
-                print("exceed max acceleration")
-                continue
-            elif not collision:
-                continue
-            elif collision:
-                if not d:
-                    ok_ind.append(fplist[i])
-                elif d:
-                    fplist[i].cf = fplist[i].cf + K_OBS * 1 / (sum(d) / len(d))
-                    ok_ind.append(fplist[i])
         return ok_ind
-
-    def obb_collision_detection(self, fp):
-        """Oriented Bounding boxes object collision detection, detect all obstacles  in the detection collision range
-
-        Parameters
-        ----------
-        fp : Frenet Path
-
-        Returns
-        -------
-        Collision or not: if not collision, calculate the distance d between the
-        bounding box and the obstacles
-        """
-        d_list = []
-        for ob in self.obs:
-            d_min = 255
-            d = ((fp.x[1] - ob[0]) ** 2 + (fp.y[1] - ob[1]) ** 2)
-            self.det_range = np.sqrt((max(fp.x) - min(fp.x)) ** 2 + (max(fp.y) - min(fp.y)) ** 2)
-            if d <= self.det_range:
-                v1 = Obstacle(ob)
-                for (ix, iy, yaw) in zip(fp.x, fp.y, fp.yaw):
-                    vehicle = Obstacle([ix, iy, yaw, L_V, W_V])
-                    v2 = vehicle
-                    detection, d = collision_check(v1, v2)
-                    if detection is True:
-                        return False, None
-                    if d < d_min:
-                        d_min = d
-                d_list.append(d_min)
-                self.num_obb = len(d_list)
-        return True, d_list
     
-    def ttc_check(self, fp):
-        
+    def traversable_check(self, fp, state):
+        """Check each position whether in the max gap ranges
+        Args:
+            fp (list): the position of each frenet path
+
+        Returns:
+            whether it is traversable
+        """
         for i in range(len(fp.x)):
-            ix, iy, iyaw = fp.x[i], fp.y[i], fp.yaw[i]
+            ix, iy = fp.x[i], fp.y[i]
+            angle = np.arctan(ix-state.x/iy-state.y)
+            print("yaw", self.yaw)
+            print("gap_min", self.max_gap_min)
+            min_angle = self.max_gap_min - state.yaw
+            max_angle = self.max_gap_max - state.yaw
 
-
+            if min_angle <= angle <= max_angle:
+                continue
+            else:
+                return False
+        return True
 
     @staticmethod
     def calc_frenet_paths(state: State) -> List:

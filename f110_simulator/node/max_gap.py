@@ -82,6 +82,7 @@ class MaxGap:
         max_gap_msg.header.stamp = rospy.get_rostime()
         max_gap_msg.header.frame_id = 'map'
         max_gap_msg.ranges = max_gap
+        max_gap_msg.angle_increment = angle_increment
         max_gap_msg.angle_min = i_s * angle_increment - np.pi
         max_gap_msg.angle_max = i_e * angle_increment - np.pi
         self.max_gap_pub.publish(max_gap_msg)

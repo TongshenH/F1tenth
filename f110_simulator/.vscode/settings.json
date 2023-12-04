@@ -6,12 +6,16 @@
         "/opt/ros/noetic/lib/python3/dist-packages"
     ],
     "cSpell.words": [
+        "arange",
+        "arctan",
         "argmax",
         "dtype",
         "fplist",
         "Frenet",
         "iyaw",
+        "Laserscan",
         "loadtxt",
-        "maxgap"
+        "maxgap",
+        "squaternion"
     ]
 }

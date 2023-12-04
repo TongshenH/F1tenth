@@ -228,7 +228,7 @@ class PathTrackingNode:
         while not rospy.is_shutdown():
   
             local_paths = []
-            path, det_range, num_obb, fplist = self.frenet_optimal_planner.frenet_optimal_planning(self.state, self.obs)
+            path, fplist = self.frenet_optimal_planner.frenet_optimal_planning(self.state, self.obs)
             
             # Publish the local path list
             for i in range(len(fplist)):
@@ -266,9 +266,6 @@ class PathTrackingNode:
             steering_angle, target_idx = self.stanley_controller.stanley_control(self.state)
             steering_angle = np.clip(steering_angle, -MAX_STEER, MAX_STEER)
             traj_actual.update(self.state)
-
-            if show_animation:
-                visual.show_animation(self.state, path, target_idx, traj_actual, self.obs, det_range, num_obb)
 
             if np.hypot(path.x[1] - self.traj_d.cx[-1], path.y[1] - self.traj_d.cy[-1]) <= 2.0:
                 self.ackermann_msg.drive.speed = 0
