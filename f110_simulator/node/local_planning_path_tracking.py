@@ -50,11 +50,12 @@ class PathTrackingNode:
         self.state = State(self.traj_d, x=0, y=0, yaw=0, v=0)
         
         # Init Time to Collision (TTC) check parameters
-        self.obs = []
         self.beams = None
         self.brake = Bool()
         self.threshold = 0.1
-        
+
+        # Init max gap 
+        self.max_gap = []
 
         # Init the Stanley controller
         self.stanley_controller = StanleyController(self.traj_d, K_S, L_W)
@@ -63,9 +64,13 @@ class PathTrackingNode:
         # Publish frequency
         self.rate = rospy.Rate(int(rospy.get_param("~publish_rate")))
 
-        # Init subscribers to retrieve position and heading from NovAtel RTK
+        # Init subscribers to retrieve position 
         self.odom_sub = rospy.Subscriber("odom",
                                          Odometry, self.odom_callback)
+        
+        # Init subscribers to retrieve max gap topic 
+        self.max_gap_sub = rospy.Subscriber("/max_gap",
+                                         LaserScan, self.max_gap_callback)
         
         # Init local path publisher
         self.local_path_pub = None
@@ -92,6 +97,9 @@ class PathTrackingNode:
             self.player = None
             self.bag_file_path = rospy.get_param("~bag_path")
             self.sim_sub = rospy.Subscriber("/status", String, self.sim_callback)
+
+    def max_gap_callback(self, data):
+        self.max_gap = [data.angle_min, data.angle_max]
 
     def sim_callback(self, data):
         """Get the status when the camera finishes initialization in the simulation mode
@@ -195,8 +203,8 @@ class PathTrackingNode:
                     self.brake = True
                     self.ackermann_msg.drive.speed = 0
                     # Uncomment the line below for tuning minimum TTC
-                    print("velocity:", self.vel)
-                    print("TTC{}: {}".format(i, ttc))
+                    # print("velocity:", self.vel)
+                    # print("TTC{}: {}".format(i, ttc))
                     self.ackermann_pub.publish(self.ackermann_msg)
                     self.brake_pub.publish(self.brake)
 
@@ -225,9 +233,8 @@ class PathTrackingNode:
         target_idx, _ = self.stanley_controller.calc_target_index(self.state)
 
         while not rospy.is_shutdown():
-  
             local_paths = []
-            path, fplist = self.frenet_optimal_planner.frenet_optimal_planning(self.state)
+            path, fplist = self.frenet_optimal_planner.frenet_optimal_planning(self.state, self.max_gap)
             
             # Publish the local path list
             for i in range(len(fplist)):

@@ -93,7 +93,7 @@ class FrenetPathPlanning:
         return ok_ind
     
     @staticmethod
-    def traversable_check(self,fp, state, max_gap):
+    def traversable_check(fp, state, max_gap):
         """Check each position whether in the max gap ranges
         Args:
             fp (list): the position of each frenet path
@@ -103,20 +103,23 @@ class FrenetPathPlanning:
         """
         for i in range(len(fp.x)):
             angle = np.arctan(fp.x[i]-state.x/fp.y[i]-state.y)
-            print("state:", state.x)
             print("angle:", angle)
-            print("gap_min", max_gap.max_gap_min)
-            min_angle = max_gap.max_gap_min - state.yaw
-            max_angle = max_gap.max_gap_max - state.yaw
+            # Pass initial state
+            if not max_gap or state.x == 0:
+                continue
 
-            # # Pass Initial state
-            # if state.x == 0:
-            #     continue
-
-            # elif min_angle <= angle <= max_angle:
-            #     continue
-            # else:
-            #     return False
+            else:
+                min_angle = max_gap[0] - state.yaw
+                max_angle = max_gap[1] - state.yaw
+                print("yaw", state.yaw)
+                print("min", min_angle)
+                print("max", max_angle)
+                if min_angle <= angle <= max_angle:
+                    continue
+                else:
+                    return False
+        
+        print("good path")
         return True
 
     @staticmethod
@@ -134,7 +137,6 @@ class FrenetPathPlanning:
             Include a list contains multiple alternative paths in Frenet Path format
         """
         frenet_paths = []
-
         # generate path to each offset goal
         for di in np.arange(-MAX_ROAD_WIDTH / 2, MAX_ROAD_WIDTH / 2 + D_ROAD_W, D_ROAD_W):
             # Lateral motion planning

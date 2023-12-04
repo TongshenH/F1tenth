@@ -5,10 +5,8 @@
     <arg name="bag_path" default="$(find f110_simulator)/bag" />
     <arg name="path_fp" default="$(find f110_simulator)/trajectory/key_points.csv" />
 
-    <include file = "$(find f110_simulator)/launch/simulator.launch" />
-    <!-- <include file="$(find f110_simulator)/launch/vehicle_odom.launch"/> -->
+    <!-- <include file = "$(find f110_simulator)/launch/simulator.launch" /> -->
 
-    <node pkg = "f110_simulator" type = "max_gap.py" name = "MaxGap_node"/>
     <node name="path_tracking_node" pkg="f110_simulator" type="local_planning_path_tracking.py" output="screen" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@'">
         <param name="~publish_rate" value="$(arg publish_rate)"/>
         <param name="~bag_path" value="$(arg bag_path)"/>
