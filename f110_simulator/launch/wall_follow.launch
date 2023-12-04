@@ -1,6 +1,6 @@
 <launch>
     <include file = "$(find f110_simulator)/launch/simulator.launch" />
-    <node pkg = "f110_simulator" type ="auto_brake.py" name = "Safe" output = "screen" />
     <node pkg = "f110_simulator" type = "wall_follow.py" name = "WallFollow_node"/>
     <node pkg = "f110_simulator" type = "publish_path.py" name = "path_publisher"/>
+    <node pkg = "f110_simulator" type = "max_gap.py" name = "MaxGap_node"/>
 </launch>

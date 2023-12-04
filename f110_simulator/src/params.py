@@ -19,19 +19,19 @@ MAX_SIMULATION_TIME = 100
 
 # Local path planning parameter
 D_ROAD_W = 0.1  # road width sampling length [m]
-MAX_T = 2.0     # max prediction time [m]
-MIN_T = 1.9     # min prediction time [m]
+MAX_T = 1.0     # max prediction time [m]
+MIN_T = 0.9     # min prediction time [m]
 D_T_S = 0.5       # target speed sampling length [m/s]
 N_S_SAMPLE = 1  # sampling number of target speed
 
 # Cost function parameters
 K_J = 0.01
 K_T = 0.1
-K_D = 0.1
+K_D = 12
 K_LAT = 1.0
 K_LON = 1.0
 K_OBS = 5.0
 
 # Stanley controller parameter
-K_S = 0.1  # control gain
+K_S = 0.5  # control gain
 KP_S = 1.0  # speed proportional gain

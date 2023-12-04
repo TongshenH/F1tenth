@@ -122,6 +122,13 @@ class FrenetPathPlanning:
                 d_list.append(d_min)
                 self.num_obb = len(d_list)
         return True, d_list
+    
+    def ttc_check(self, fp):
+        
+        for i in range(len(fp.x)):
+            ix, iy, iyaw = fp.x[i], fp.y[i], fp.yaw[i]
+
+
 
     @staticmethod
     def calc_frenet_paths(state: State) -> List:

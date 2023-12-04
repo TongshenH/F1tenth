@@ -6,8 +6,12 @@
         "/opt/ros/noetic/lib/python3/dist-packages"
     ],
     "cSpell.words": [
+        "argmax",
+        "dtype",
         "fplist",
         "Frenet",
-        "loadtxt"
+        "iyaw",
+        "loadtxt",
+        "maxgap"
     ]
 }
