@@ -2,7 +2,6 @@
 
 import numpy as np
 import rospy
-from ackermann_msgs.msg import AckermannDriveStamped
 from sensor_msgs.msg import LaserScan
 
 class MaxGap:
@@ -12,6 +11,7 @@ class MaxGap:
         rospy.init_node("MaxGap_node")
 
         self.lidar_sub = rospy.Subscriber("/scan", LaserScan, self.lidar_callback)
+        self.max_gap_pub = rospy.Publisher("/max_gap", LaserScan, queue_size=10)
         
         # Init follow the gap parameters
         self.bubble_radius = 25           # cm
@@ -72,9 +72,19 @@ class MaxGap:
 
     def lidar_callback(self, data):
         ranges = data.ranges
+        angle_increment = data.angle_increment
         self.preprocess_lidar_scan(ranges)
         ranges = self.process_bubble(self.current_proc_ranges)
         i_s, i_e, max_gap = self.max_gap(ranges)
+
+        # Publish the max gap laser scan
+        max_gap_msg = LaserScan()
+        max_gap_msg.header.stamp = rospy.get_rostime()
+        max_gap_msg.header.frame_id = 'map'
+        max_gap_msg.ranges = max_gap
+        max_gap_msg.angle_min = i_s * angle_increment - np.pi
+        max_gap_msg.angle_max = i_e * angle_increment - np.pi
+        self.max_gap_pub.publish(max_gap_msg)
         print("The max gap:", i_s, i_e)
 
 def main():
