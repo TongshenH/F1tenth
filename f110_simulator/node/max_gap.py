@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
+import sys
+import os 
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.insert(1, parent)
+sys.path.insert(0, parent + "/src")
 
 import numpy as np
 import rospy
 from sensor_msgs.msg import LaserScan
+from src.gap import MaxGapState
 
 class MaxGap:
     """Follow the gap between obstacles
@@ -16,6 +23,7 @@ class MaxGap:
         # Init follow the gap parameters
         self.bubble_radius = 25           # cm
         self.max_distance = 4
+        self.max_gap_state = MaxGapState()
 
         # Init the lidar scan range
         self.last_proc_ranges = np.zeros((1080,),dtype = np.float32)
@@ -85,8 +93,10 @@ class MaxGap:
         max_gap_msg.angle_increment = angle_increment
         max_gap_msg.angle_min = i_s * angle_increment - np.pi
         max_gap_msg.angle_max = i_e * angle_increment - np.pi
+
         self.max_gap_pub.publish(max_gap_msg)
-        print("The max gap:", i_s, i_e)
+        self.max_gap_state.update(max_gap_msg)
+        print("The max gap:", self.max_gap_state.max_gap_max)
 
 def main():
     maxgap = MaxGap()

@@ -8,7 +8,6 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.insert(1, parent)
 sys.path.insert(0, parent + "/src")
-print(sys.path)
 
 import rospy
 import subprocess
@@ -228,7 +227,7 @@ class PathTrackingNode:
         while not rospy.is_shutdown():
   
             local_paths = []
-            path, fplist = self.frenet_optimal_planner.frenet_optimal_planning(self.state, self.obs)
+            path, fplist = self.frenet_optimal_planner.frenet_optimal_planning(self.state)
             
             # Publish the local path list
             for i in range(len(fplist)):

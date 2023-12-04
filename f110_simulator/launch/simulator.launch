@@ -35,7 +35,8 @@
     <rosparam command="load" file="$(find f110_simulator)/params.yaml"/>
   </node>
 
-  <!-- <node pkg = "f110_simulator" type ="auto_brake.py" name = "Safety" output = "screen" /> -->
+  <!-- Launch Max Gap Node -->
+  <node pkg = "f110_simulator" type = "max_gap.py" name = "MaxGap_node"/>
 
   <!-- ***Put launch command for new planner here:-->
   <!-- Launch the New Planner Node -->
