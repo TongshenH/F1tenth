@@ -23,23 +23,7 @@ class FrenetPathPlanning:
     """
     def __init__(self, traj_d):
         self.traj_d = traj_d
-        self.road_width = None
-
-
-    def odom_callback(self, data):
-        """Get the vehicle_odom topic
-
-        Parameters
-        ----------
-        data : odom
-            Contain the state of the vehicle including position, orientation and vel
-        """
-        # Get the position and orientation of the vehicle
-        self.x = data.pose.pose.position.x
-        self.y = data.pose.pose.position.y
-        q = data.pose.pose.orientation
-        q2 = quat.Quaternion(q.w, q.x, q.y, q.z)
-        self.yaw = q2.to_euler()[2]       
+        self.road_width = None      
 
     def frenet_optimal_planning(self, state: State, max_gap_state: MaxGapState):
         """find the optimal local path based on the frenet algorithm
@@ -54,9 +38,10 @@ class FrenetPathPlanning:
         FrenetPath
             return the best path in the Frenet coordinate
         """
-        fplist = self.calc_frenet_paths(state)
+        fplist, state_x, state_y, state_yaw = self.calc_frenet_paths(state)
         fplist = self.frenet2cart(fplist)
-        fplist = self.check_paths(fplist, state, max_gap_state)
+        fplist = self.check_paths(fplist, state_x, state_y, state_yaw, 
+                                  max_gap_state)
 
         # find minimum cost path
         min_cost = float("inf")
@@ -70,7 +55,8 @@ class FrenetPathPlanning:
             return None
         return best_path, fplist
 
-    def check_paths(self, fplist: List, state, max_gap_state) -> List:
+    def check_paths(self, fplist: List, state_x, state_y, state_yaw, 
+                    max_gap_state) -> List:
         """Delete the paths not in the max gap
 
         Parameters
@@ -85,15 +71,18 @@ class FrenetPathPlanning:
         """
         ok_ind = []
         for i, _ in enumerate(fplist):
-            traversable = self.traversable_check(fplist[i], state, max_gap_state)
+            traversable = self.traversable_check(fplist[i], state_x, state_y, 
+                                                 state_yaw, max_gap_state)
             if traversable:
+                print(f"good path{i}")
                 ok_ind.append(fplist[i])
             elif not traversable:
+                print(f"bad path{i}")
                 continue
         return ok_ind
     
     @staticmethod
-    def traversable_check(fp, state, max_gap):
+    def traversable_check(fp, state_x, state_y, state_yaw, max_gap):
         """Check each position whether in the max gap ranges
         Args:
             fp (list): the position of each frenet path
@@ -102,24 +91,26 @@ class FrenetPathPlanning:
             whether it is traversable
         """
         for i in range(len(fp.x)):
-            angle = np.arctan(fp.x[i]-state.x/fp.y[i]-state.y)
+            # print("path_x", fp.x[0])
+            # print("state_x",state_x)
+            # print("===========================")
+            angle = np.arctan((fp.y[i]-state_y)/(fp.x[i]-state_x))
             print("angle:", angle)
+
             # Pass initial state
-            if not max_gap or state.x == 0:
+            if not max_gap or state_x == 0:
                 continue
 
             else:
-                min_angle = max_gap[0] - state.yaw
-                max_angle = max_gap[1] - state.yaw
-                print("yaw", state.yaw)
+                min_angle = max_gap[0] - state_yaw
+                max_angle = max_gap[1] - state_yaw
+                # print("yaw", state.yaw)
                 print("min", min_angle)
                 print("max", max_angle)
-                if min_angle <= angle <= max_angle:
-                    continue
-                else:
-                    return False
-        
-        print("good path")
+                # if min_angle <= angle <= max_angle:
+                #     continue
+                # else:
+                #     return False
         return True
 
     @staticmethod
@@ -136,6 +127,11 @@ class FrenetPathPlanning:
         listntic polynomial
             Include a list contains multiple alternative paths in Frenet Path format
         """
+        # Initialize vehicle state
+        state_x = state.x
+        state_y = state.y
+        state_yaw = state.yaw
+
         frenet_paths = []
         # generate path to each offset goal
         for di in np.arange(-MAX_ROAD_WIDTH / 2, MAX_ROAD_WIDTH / 2 + D_ROAD_W, D_ROAD_W):
@@ -179,7 +175,7 @@ class FrenetPathPlanning:
 
                     frenet_paths.append(tfp)
 
-        return frenet_paths
+        return frenet_paths, state_x, state_y, state_yaw
 
     def frenet2cart(self, fplist: List) -> List:
         """convert the path in frenet frame to the inertial frame
