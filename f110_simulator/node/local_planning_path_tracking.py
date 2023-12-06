@@ -265,7 +265,8 @@ class PathTrackingNode:
                     best_path_msg.poses.append(pose)
             self.best_local_pub.publish(best_path_msg)
             
-
+            
+            rospy.sleep(5)
             self.stanley_controller.update_trajectory(path)
 
             # stanley controller return the steering angle in radian

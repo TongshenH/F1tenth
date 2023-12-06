@@ -8,7 +8,7 @@ DT = 0.2                # time tick [s]
 L_W = 0.3302            # [m] Wheel base of vehicle
 W_V = 0.2032            # [m] width of vehicle
 L_V = 0.4               # [m] total length of the vehicle
-TARGET_SPEED = 3.5        # target speed [m/s]
+TARGET_SPEED = 3        # target speed [m/s]
 ROBOT_RADIUS = 1.2      # robot radius [m]
 MAX_ROAD_WIDTH = 1.5    # maximum road width [m]
 MAX_SPEED = 8           # maximum speed [m/s]
@@ -33,5 +33,5 @@ K_LON = 1.0
 K_OBS = 5.0
 
 # Stanley controller parameter
-K_S = 0.4  # control gain
+K_S = 0.5  # control gain
 KP_S = 1.0  # speed proportional gain

@@ -21,9 +21,9 @@ class MaxGap:
         self.max_gap_pub = rospy.Publisher("/max_gap", LaserScan, queue_size=10)
         
         # Init follow the gap parameters
-        self.bubble_radius = 40           # cm
+        self.bubble_radius = 20           # cm
         self.max_distance = 5
-        self.window_size = 80             # degree
+        self.window_size = 90             # degree
         self.max_gap_state = MaxGapState()
 
         # Init the lidar scan range

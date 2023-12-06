@@ -134,10 +134,10 @@ class FrenetPathPlanning:
                 print("min", min_angle)
                 print("max", max_angle)
                 print("===========================")
-                if min_angle <= angle <= max_angle:
-                    continue
-                else:
-                    return False
+                # if min_angle <= angle <= max_angle:
+                #     continue
+                # else:
+                #     return False
         return True
 
     @staticmethod
