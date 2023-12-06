@@ -21,8 +21,8 @@ class MaxGap:
         self.max_gap_pub = rospy.Publisher("/max_gap", LaserScan, queue_size=10)
         
         # Init follow the gap parameters
-        self.bubble_radius = 20           # cm
-        self.max_distance = 4
+        self.bubble_radius = 40           # cm
+        self.max_distance = 5
         self.window_size = 80             # degree
         self.max_gap_state = MaxGapState()
 
@@ -31,7 +31,6 @@ class MaxGap:
 
     def preprocess_lidar_scan(self, ranges):
         """Replace the lidar distance with the max distance by the max threshold,
-        change the lidar scan range resolution.
         Args:
             ranges (list): the lidar range list
         """
@@ -98,8 +97,6 @@ class MaxGap:
         max_gap_msg.range_max = data.range_max
         max_gap_msg.intensities = intensities[i_s: i_e]
         max_gap_msg.angle_increment = angle_increment
-        # max_gap_msg.angle_min = i_s * angle_increment - np.pi
-        # max_gap_msg.angle_max = i_e * angle_increment - np.pi
         max_gap_msg.angle_min = i_s * angle_increment - np.radians(self.window_size)
         max_gap_msg.angle_max = i_e * angle_increment - np.radians(self.window_size)
 

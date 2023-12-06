@@ -38,10 +38,11 @@ class FrenetPathPlanning:
         FrenetPath
             return the best path in the Frenet coordinate
         """
+        max_gap = max_gap_state
         fplist, state_x, state_y, state_yaw = self.calc_frenet_paths(state)
         fplist = self.frenet2cart(fplist)
         fplist = self.check_paths(fplist, state_x, state_y, state_yaw, 
-                                  max_gap_state)
+                                  max_gap)
 
         # find minimum cost path
         min_cost = float("inf")
@@ -80,6 +81,23 @@ class FrenetPathPlanning:
                 print(f"bad path{i}")
                 continue
         return ok_ind
+
+    @staticmethod
+    def coordinate_transform(fp, state_x, state_y, state_yaw):
+        """
+        Transfer path pose in the world frame to the odom frame
+        """
+        for i in range(len(fp.x)):
+
+            # Translation
+            fp.x[i] = fp.x[i] - state_x
+            fp.y[i] = fp.y[i] - state_y
+            # Rotation
+            fp.x[i] = fp.x[i] * np.cos(state_yaw) + fp.y[i] * np.sin(state_yaw)
+            fp.x[i] = fp.y[i] * np.cos(state_yaw) - fp.x[i] * np.sin(state_yaw)
+        return fp
+
+
     
     @staticmethod
     def traversable_check(fp, state_x, state_y, state_yaw, max_gap):
@@ -91,26 +109,35 @@ class FrenetPathPlanning:
             whether it is traversable
         """
         for i in range(len(fp.x)):
-            # print("path_x", fp.x[0])
-            # print("state_x",state_x)
-            # print("===========================")
-            angle = np.arctan((fp.y[i]-state_y)/(fp.x[i]-state_x))
-            print("angle:", angle)
 
             # Pass initial state
             if not max_gap or state_x == 0:
                 continue
-
             else:
-                min_angle = max_gap[0] - state_yaw
-                max_angle = max_gap[1] - state_yaw
-                # print("yaw", state.yaw)
+                # Translation
+                fp_x1 = fp.x[i] - state_x
+                fp_y1 = fp.y[i] - state_y
+                # Rotation
+                fp_x = fp_x1 * np.cos(state_yaw) + fp_y1 * np.sin(state_yaw)
+                fp_y = fp_y1 * np.cos(state_yaw) - fp_x1 * np.sin(state_yaw)
+
+                # print("path y", fp.y[0])
+                # print("state y", state_y)
+                print("state yaw", state_yaw)
+                angle = np.arctan(fp_y/fp_x)
+                print("angle:", angle)
+
+                min_angle = max_gap[0]
+                max_angle = max_gap[1]
+                # min_angle = -(max_gap[1] - state_yaw)
+                # max_angle = -(max_gap[0] - state_yaw)
                 print("min", min_angle)
                 print("max", max_angle)
-                # if min_angle <= angle <= max_angle:
-                #     continue
-                # else:
-                #     return False
+                print("===========================")
+                if min_angle <= angle <= max_angle:
+                    continue
+                else:
+                    return False
         return True
 
     @staticmethod
