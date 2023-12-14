@@ -229,6 +229,7 @@ class PathTrackingNode:
     def track(self):
         """Follow the path"""
         # get the first target waypoint
+        rospy.sleep(5)
         traj_actual = FrenetPath()
         target_idx, _ = self.stanley_controller.calc_target_index(self.state)
 
@@ -264,11 +265,8 @@ class PathTrackingNode:
                     pose.pose.position.y = path.y[i]
                     best_path_msg.poses.append(pose)
             self.best_local_pub.publish(best_path_msg)
-            
-            
-            rospy.sleep(5)
             self.stanley_controller.update_trajectory(path)
-
+            
             # stanley controller return the steering angle in radian
             steering_angle, target_idx = self.stanley_controller.stanley_control(self.state)
             steering_angle = np.clip(steering_angle, -MAX_STEER, MAX_STEER)
